@@ -4,16 +4,17 @@ import numpy as np
 from TTS.api import TTS
 
 def read_sentences(stream: TextIO) -> list[str]:
-    sentences = [""]
+    sentences = []
     a = stream.read(1)
+    buff = ""
     while a:
         if a in ['.', '?', '!', ';', ':']:
-            sentences[-1] += a
-            sentences.append("")
+            buff+=a
+            sentences.append(buff)
         else:
-            sentences[-1] += a
+            buff += a
         a = stream.read(1)
-    return sentences
+    return sentences[:-1]
 
 def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
     img = np.zeros(size+(3,), dtype=int)
