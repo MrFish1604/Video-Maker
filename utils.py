@@ -45,10 +45,12 @@ def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
     return img
 
 ratio = 9/16
+__x = 256
+SIZE = (__x, int(1 + __x/ratio))
 URL = "http://192.168.1.16:7860"
 OPTIONS = {
-    'width': 256,
-    'height': int(1 + 256/ratio),
+    'width': SIZE[0],
+    'height': SIZE[1],
     'steps': 20
 }
 def fetch_image_from_sd_server(prompt:str, options:dict=OPTIONS, url:str=URL) -> tuple[int, array]:
@@ -71,5 +73,5 @@ def my_tts(txt:str):
     # print(f"TTS \"{txt}\"...")
     rtn = f"tts_{md5(txt.encode('utf-8')).hexdigest()[:4]}.wav"
     # tts.tts_to_file(txt, speaker=tts.speakers[0], language=tts.languages[0], file_path=rtn, speed=10)
-    tts.tts_to_file(txt, file_path=rtn)
+    # tts.tts_to_file(txt, file_path=rtn)
     return rtn
