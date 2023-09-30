@@ -1,6 +1,9 @@
 from typing import TextIO
 from numpy import array
 import numpy as np
+from hashlib import md5
+
+print("Loading TTS module...")
 from TTS.api import TTS
 
 def read_sentences(stream: TextIO) -> list[str]:
@@ -11,10 +14,11 @@ def read_sentences(stream: TextIO) -> list[str]:
         if a in ['.', '?', '!', ';', ':']:
             buff+=a
             sentences.append(buff)
+            buff = ""
         else:
             buff += a
         a = stream.read(1)
-    return sentences[:-1]
+    return sentences
 
 def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
     img = np.zeros(size+(3,), dtype=int)
@@ -33,6 +37,7 @@ model_name = TTS().list_models()[1]
 tts = TTS(model_name).to("cpu")
 
 def my_tts(txt:str):
-    rtn = "tts.wav"
-    tts.tts_to_file(txt, speaker=tts.speakers[0], language=tts.languages[0], file_path=rtn)
+    print(f"TTS \"{txt}\"...")
+    rtn = f"tts_{md5(txt.encode('utf-8')).hexdigest()[:4]}.wav"
+    tts.tts_to_file(txt, speaker=tts.speakers[0], language=tts.languages[0], file_path=rtn, emotion='Excited', speed=1.2)
     return rtn
