@@ -30,7 +30,7 @@ for s in sentences:
         print("SD ERROR:", status)
     imgs = [img]*FPS*(int(audio_clips[iplot-1].duration))
     seq = ImageSequenceClip(imgs, fps=FPS)
-    text_clip = TextClip(s)
+    text_clip = TextClip("".join([a if a!=' ' else '\n' for a in s]), color="White", font="Comic-Neue-Bold", fontsize=25)
     text_clip:TextClip = text_clip.set_position(("center","center"))
     text_clip:TextClip = text_clip.set_duration(seq.duration)
     if len(img_clips)==0:
