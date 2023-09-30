@@ -75,3 +75,11 @@ def my_tts(txt:str):
     # tts.tts_to_file(txt, speaker=tts.speakers[0], language=tts.languages[0], file_path=rtn, speed=10)
     # tts.tts_to_file(txt, file_path=rtn)
     return rtn
+
+def cut_str(txt:str, N:int=15) -> list[str]:
+    rtn = [""]
+    for a in txt.split(' '):
+        if len(rtn[-1]) >= N:
+            rtn.append("")
+        rtn[-1] += a + " "
+    return rtn

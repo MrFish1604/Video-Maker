@@ -30,15 +30,19 @@ for s in sentences:
         print("SD ERROR:", status)
     imgs = [img]*FPS*(int(audio_clips[iplot-1].duration))
     seq = ImageSequenceClip(imgs, fps=FPS)
-    text_clip = TextClip("".join([a if a!=' ' else '\n' for a in s]), color="White", font="Comic-Neue-Bold", fontsize=25)
-    text_clip:TextClip = text_clip.set_position(("center","center"))
-    text_clip:TextClip = text_clip.set_duration(seq.duration)
-    if len(img_clips)==0:
-        img_clips.append(seq)
-        text_clips.append(text_clip)
-    else:
-        img_clips.append(seq.set_start(duration, change_end=True))
-        text_clips.append(text_clip.set_start(duration, change_end=True))
+    text_options = {"color":"White", "font":"Comic-Neue-Bold", "fontsize":25}
+    words = cut_str(s)
+    h = 1*seq.duration/len(words)
+    # text_clip = TextClip("".join([a if a!=' ' else '\n' for a in s]), color="White", font="Comic-Neue-Bold", fontsize=25)
+    # text_clip:TextClip = text_clip.set_position(("center","center"))
+    # text_clip:TextClip = text_clip.set_duration(seq.duration)
+    img_clips.append(seq.set_start(duration, change_end=True))
+    text_clips += [(
+        TextClip(words[i], **text_options)
+        .set_position(("center",)*2)
+        .set_duration(h)
+        .set_start(duration + i*h, change_end=True)
+        ) for i in range(len(words)) if not words[i] in [' ', '\n', '']]
     duration += seq.duration
     iplot+=1
 
