@@ -29,7 +29,7 @@ for s in sentences:
     if(status!=200):
         print("SD ERROR:", status)
         exit(3)
-    imgs = [img]*FPS*(int(audio_clips[iplot-1].duration))
+    imgs = [img]*FPS*(int(audio_clips[iplot-1].duration + 0.5))
     seq = ImageSequenceClip(imgs, fps=FPS)
     text_options = {"color":"White", "font":"Comic-Neue-Bold", "fontsize":25}
     words = cut_str(s)
