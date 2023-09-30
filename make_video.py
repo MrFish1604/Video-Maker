@@ -28,6 +28,7 @@ for s in sentences:
     status, img = fetch_image_from_sd_server(s)
     if(status!=200):
         print("SD ERROR:", status)
+        exit(3)
     imgs = [img]*FPS*(int(audio_clips[iplot-1].duration))
     seq = ImageSequenceClip(imgs, fps=FPS)
     text_options = {"color":"White", "font":"Comic-Neue-Bold", "fontsize":25}
