@@ -13,6 +13,13 @@ from TTS.api import TTS
 def read_sentences(stream: TextIO) -> list[str]:
     sentences = []
     a = stream.read(1)
+    c = 9
+    while c!=9:
+        if a=='0':
+            c += 1
+        else:
+            c = 0
+        a = stream.read(1)
     buff = ""
     while a:
         if a in ['.', '?', '!', ';', ':']:
@@ -37,28 +44,32 @@ def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
             j=0
     return img
 
+ratio = 9/16
 URL = "http://192.168.1.16:7860"
 OPTIONS = {
     'width': 256,
-    'height': 256,
+    'height': int(1 + 256/ratio),
     'steps': 20
 }
 def fetch_image_from_sd_server(prompt:str, options:dict=OPTIONS, url:str=URL) -> tuple[int, array]:
-    options["prompt"] = prompt + " Realistic photograph"
-    response = requests.post(url=f"{url}/sdapi/v1/txt2img", json=options)
-    if not response.ok:
-        return response.status_code, array(0)
-    r = response.json()
-    image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
-    image.save(f"{prompt[:4]}.png")
-    rtn = array(image)
-    return response.status_code, rtn
+    # options["prompt"] = prompt + " Realistic photograph"
+    # response = requests.post(url=f"{url}/sdapi/v1/txt2img", json=options)
+    # if not response.ok:
+    #     return response.status_code, array(0)
+    # r = response.json()
+    # image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
+    # image.save(f"{prompt[:4]}.png")
+    # rtn = array(image)
+    # return response.status_code, rtn
+    return 200, array(Image.open(f"{prompt[:4]}.png"))
 
-model_name = TTS().list_models()[1]
+# model_name = TTS().list_models()[1]
+model_name = 'tts_models/en/ljspeech/tacotron2-DDC_ph'
 tts = TTS(model_name).to("cpu")
 
 def my_tts(txt:str):
     # print(f"TTS \"{txt}\"...")
     rtn = f"tts_{md5(txt.encode('utf-8')).hexdigest()[:4]}.wav"
-    tts.tts_to_file(txt, speaker=tts.speakers[0], language=tts.languages[0], file_path=rtn, emotion='Excited', speed=1.2)
+    # tts.tts_to_file(txt, speaker=tts.speakers[0], language=tts.languages[0], file_path=rtn, speed=10)
+    tts.tts_to_file(txt, file_path=rtn)
     return rtn
