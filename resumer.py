@@ -12,7 +12,9 @@ print()
 model = GPT4All("orca-mini-3b.ggmlv3.q4_0.bin")
 
 # system_template = "You are to resume the text given to you. Be accurate."
-system_template = "You are to resume the text given to you in an entertaining way for children."
+# system_template = "You are to resume the text given to you in an entertaining way for children."
+system_template = "List the 3 main concepts of this text. Max 2 words per item."
+# system_template = "Describe 3 images of the 3 main concepts of the following text."
 
 with model.chat_session(system_prompt=system_template):
     print(model.current_chat_session)

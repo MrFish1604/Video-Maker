@@ -3,3 +3,6 @@ __pycache__
 output*
 *.mp4
 *.wav
+*.png
+*.jpg
+fetch_image.py

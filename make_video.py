@@ -8,6 +8,7 @@ FPS = 24
 
 print("Reading input stream...")
 sentences = read_sentences(stdin)
+N = len(sentences)
 print(f"Nbr sentences: {len(sentences)}")
 print(sentences)
 
@@ -20,12 +21,15 @@ print("Generating images...")
 iplot = 1
 imgs: list[array] = []
 for s in sentences:
-    img = get_image_from_text(s)
+    print(f"{iplot}/{N}")
+    status, img = fetch_image_from_sd_server(s)
+    if(status!=200):
+        print("SD ERROR:", status)
     imgs += [img]*FPS*(int(audio_clips[iplot-1].duration))
-    plt.subplot(len(sentences)*10 + 100 + iplot)
+    plt.subplot(N*10 + 100 + iplot)
     plt.imshow(imgs[-1])
     iplot+=1
-plt.show()
+plt.show(block=True)
 
 clip = ImageSequenceClip(imgs, fps=FPS)
 clip = clip.set_audio(audio_clip)
