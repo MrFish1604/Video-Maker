@@ -35,6 +35,7 @@ imgs: list[array] = []
 text_clips:list[TextClip] = []
 img_clips:list[ImageSequenceClip] = []
 duration = 0
+fontsize = calc_fontsize(int(img_options.get("height", img_options.get("width", SIZE[1]))))
 for s in sentences:
     print(f"{iplot}/{N}")
     status, img = fetch_image_from_sd_server(s, options=img_options)
@@ -45,7 +46,7 @@ for s in sentences:
     for i in img[1:]:
         imgs += [i]*round(FPS/len(img))*(int(audio_clips[iplot-1].duration + 0.5))
     seq = ImageSequenceClip(imgs, fps=FPS)
-    text_options = {"color":"White", "font":"Comic-Neue-Bold", "fontsize":42}
+    text_options = {"color":"White", "font":"Comic-Neue-Bold", "fontsize":fontsize}
     words = cut_str(s)
     h = 1*seq.duration/len(words)
     # text_clip = TextClip("".join([a if a!=' ' else '\n' for a in s]), color="White", font="Comic-Neue-Bold", fontsize=25)

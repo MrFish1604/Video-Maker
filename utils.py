@@ -27,6 +27,9 @@ ENDC = '\033[0m'
 def printb(txt:str, *args, **kwargs):
     print(BOLD + txt + ENDC, *args, **kwargs)
 
+def calc_fontsize(h:int) -> int:
+    return 0.05*h
+
 def read_sentences(stream: TextIO) -> list[str]:
     sentences = []
     a = stream.read(1)
