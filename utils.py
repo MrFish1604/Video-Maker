@@ -27,9 +27,6 @@ ENDC = '\033[0m'
 def printb(txt:str, *args, **kwargs):
     print(BOLD + txt + ENDC, *args, **kwargs)
 
-printb("Loading TTS module...\n")
-from TTS.api import TTS
-
 def read_sentences(stream: TextIO) -> list[str]:
     sentences = []
     a = stream.read(1)
@@ -76,6 +73,10 @@ OPTIONS = {
 def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL) -> tuple[int, array]:
     payload = OPTIONS.copy()
     payload.update(options)
+    if "height" in options and not "width" in options:
+        payload["width"] = 1 + int(int(payload["height"])*ratio)
+    elif not "height" in options and "width" in options:
+        payload['height'] = 1 + int(int(payload["width"])/ratio)
     payload["prompt"] = prompt + " Realistic photograph"
     print("payload=", payload)
     response = requests.post(url=f"{url}/sdapi/v1/txt2img", json=payload)
@@ -86,11 +87,19 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL) -> 
     return response.status_code, images
     # return 200, array(Image.open(f"{prompt[:4]}.png"))
 
-# model_name = TTS().list_models()[1]
-model_name = 'tts_models/en/ljspeech/tacotron2-DDC_ph'
-with open("/dev/null", 'w') as nullfile:
-    with redirect_stdout(nullfile):
-        tts = TTS(model_name).to("cpu")
+tts = None
+tts_loaded = False
+def load_TTS_module():
+    global tts
+    global tts_loaded
+    printb("Loading TTS module...\n")
+    from TTS.api import TTS
+    # model_name = TTS().list_models()[1]
+    model_name = 'tts_models/en/ljspeech/tacotron2-DDC_ph'
+    with open("/dev/null", 'w') as nullfile:
+        with redirect_stdout(nullfile):
+            tts = TTS(model_name).to("cpu")
+    tts_loaded = True
 
 def my_tts(txt:str):
     # print(f"TTS \"{txt}\"...")
@@ -98,6 +107,8 @@ def my_tts(txt:str):
     if (tts_cache_p/rtn).exists():
         print("TTS uses cache")
         return (tts_cache_p/rtn).as_posix()
+    if not tts_loaded:
+        load_TTS_module()
     # tts.tts_to_file(txt, speaker=tts.speakers[0], language=tts.languages[0], file_path=rtn, speed=10)
     tts.tts_to_file(txt, file_path=(tts_cache_p/rtn))
     return (tts_cache_p/rtn).as_posix()
