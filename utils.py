@@ -6,8 +6,15 @@ import requests
 import io
 import base64
 from PIL import Image
+from contextlib import redirect_stdout
 
-print("Loading TTS module...")
+BOLD = '\033[1m'
+ENDC = '\033[0m'
+
+def printb(txt:str, *args, **kwargs):
+    print(BOLD + txt + ENDC, *args, **kwargs)
+
+printb("Loading TTS module...\n")
 from TTS.api import TTS
 
 def read_sentences(stream: TextIO) -> list[str]:
@@ -68,7 +75,9 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL) -> 
 
 # model_name = TTS().list_models()[1]
 model_name = 'tts_models/en/ljspeech/tacotron2-DDC_ph'
-tts = TTS(model_name).to("cpu")
+with open("/dev/null", 'w') as nullfile:
+    with redirect_stdout(nullfile):
+        tts = TTS(model_name).to("cpu")
 
 def my_tts(txt:str):
     # print(f"TTS \"{txt}\"...")

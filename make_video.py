@@ -15,18 +15,18 @@ if len(argv)>1:
         img_options[op[0]] = op[1]
 
 print(f"Images Options : {img_options}")
-print("Reading input stream...")
+printb("\nReading input stream...\n")
 sentences = read_sentences(stdin)
 N = len(sentences)
 print(f"Nbr sentences: {len(sentences)}")
 print(sentences)
 
-print("Generating audio...")
+printb("\nGenerating audio...")
 wav_files = [my_tts(s) for s in sentences]
 audio_clips = [AudioFileClip(wav) for wav in wav_files]
 audio_clip = concatenate_audioclips(audio_clips)
 
-print("Generating images...")
+printb("\nGenerating images...")
 iplot = 1
 imgs: list[array] = []
 text_clips:list[TextClip] = []
@@ -36,7 +36,7 @@ for s in sentences:
     print(f"{iplot}/{N}")
     status, img = fetch_image_from_sd_server(s, options=img_options)
     if(status!=200):
-        print("SD ERROR:", status)
+        printb("SD ERROR:", status)
         exit(3)
     imgs = [img[0]]*int(FPS/len(img))*(int(audio_clips[iplot-1].duration + 0.5))
     for i in img[1:]:
