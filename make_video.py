@@ -18,6 +18,9 @@ print(f"Images Options : {img_options}")
 printb("\nReading input stream...\n")
 sentences = read_sentences(stdin)
 N = len(sentences)
+if N<1:
+    printb("ERROR: No input data")
+    exit(2)
 print(f"Nbr sentences: {len(sentences)}")
 print(sentences)
 
@@ -38,11 +41,11 @@ for s in sentences:
     if(status!=200):
         printb("SD ERROR:", status)
         exit(3)
-    imgs = [img[0]]*int(FPS/len(img))*(int(audio_clips[iplot-1].duration + 0.5))
+    imgs = [img[0]]*int(1+FPS/len(img))*(int(audio_clips[iplot-1].duration + 0.5))
     for i in img[1:]:
-        imgs += [i]*int(FPS/len(img))*(int(audio_clips[iplot-1].duration + 0.5))
+        imgs += [i]*int(1+FPS/len(img))*(int(audio_clips[iplot-1].duration + 0.5))
     seq = ImageSequenceClip(imgs, fps=FPS)
-    text_options = {"color":"White", "font":"Comic-Neue-Bold", "fontsize":25}
+    text_options = {"color":"White", "font":"Comic-Neue-Bold", "fontsize":42}
     words = cut_str(s)
     h = 1*seq.duration/len(words)
     # text_clip = TextClip("".join([a if a!=' ' else '\n' for a in s]), color="White", font="Comic-Neue-Bold", fontsize=25)

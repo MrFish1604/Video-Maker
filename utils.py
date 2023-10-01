@@ -8,10 +8,18 @@ import base64
 from PIL import Image
 from contextlib import redirect_stdout
 from configreader import *
+from pathlib import Path
 
 config = readconfig("config")
 SD_ADDR = config.get("SD_ADDR", "127.0.0.1")
 SD_PORT = config.get("SD_PORT", "7860")
+
+cache_p = Path(".cache")
+if not cache_p.exists():
+    Path.mkdir(cache_p)
+tts_cache_p = cache_p/Path("tts")
+if not tts_cache_p.exists():
+    Path.mkdir(tts_cache_p)
 
 BOLD = '\033[1m'
 ENDC = '\033[0m'
@@ -87,9 +95,12 @@ with open("/dev/null", 'w') as nullfile:
 def my_tts(txt:str):
     # print(f"TTS \"{txt}\"...")
     rtn = f"tts_{md5(txt.encode('utf-8')).hexdigest()[:4]}.wav"
+    if (tts_cache_p/rtn).exists():
+        print("TTS uses cache")
+        return (tts_cache_p/rtn).as_posix()
     # tts.tts_to_file(txt, speaker=tts.speakers[0], language=tts.languages[0], file_path=rtn, speed=10)
-    tts.tts_to_file(txt, file_path=rtn)
-    return rtn
+    tts.tts_to_file(txt, file_path=(tts_cache_p/rtn))
+    return (tts_cache_p/rtn).as_posix()
 
 def cut_str(txt:str, N:int=15) -> list[str]:
     rtn = [""]
