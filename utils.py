@@ -57,14 +57,13 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL) -> 
     payload = OPTIONS.copy()
     payload.update(options)
     payload["prompt"] = prompt + " Realistic photograph"
-    response = requests.post(url=f"{url}/sdapi/v1/txt2img", json=options)
+    print("payload=", payload)
+    response = requests.post(url=f"{url}/sdapi/v1/txt2img", json=payload)
     if not response.ok:
         return response.status_code, array(0)
     r = response.json()
-    image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
-    # image.save(f"{prompt[:4]}.png")
-    rtn = array(image)
-    return response.status_code, rtn
+    images:list = [array(Image.open(io.BytesIO(base64.b64decode(img)))) for img in r['images']]
+    return response.status_code, images
     # return 200, array(Image.open(f"{prompt[:4]}.png"))
 
 # model_name = TTS().list_models()[1]
