@@ -7,6 +7,11 @@ import io
 import base64
 from PIL import Image
 from contextlib import redirect_stdout
+from configreader import *
+
+config = readconfig("config")
+SD_ADDR = config.get("SD_ADDR", "127.0.0.1")
+SD_PORT = config.get("SD_PORT", "7860")
 
 BOLD = '\033[1m'
 ENDC = '\033[0m'
@@ -54,7 +59,7 @@ def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
 ratio = 9/16
 __x = 256
 SIZE = (__x, int(1 + __x/ratio))
-URL = "http://192.168.1.16:7860"
+URL = f"http://{SD_ADDR}:{SD_PORT}"
 OPTIONS = {
     'width': SIZE[0],
     'height': SIZE[1],
