@@ -1,4 +1,4 @@
-from sys import stdin
+from sys import stdin, argv
 from utils import *
 from numpy import array
 from moviepy.editor import ImageSequenceClip, AudioFileClip, concatenate_audioclips, TextClip, CompositeVideoClip, concatenate_videoclips
@@ -6,6 +6,15 @@ import matplotlib.pyplot as plt
 
 FPS = 24
 
+img_options = {"batch_size":1}
+if len(argv)>1:
+    for arg in argv[1:]:
+        op = arg.split('=')
+        if len(op)!=2:
+            continue
+        img_options[op[0]] = op[1]
+
+print(f"Images Options : {img_options}")
 print("Reading input stream...")
 sentences = read_sentences(stdin)
 N = len(sentences)
@@ -25,7 +34,7 @@ img_clips:list[ImageSequenceClip] = []
 duration = 0
 for s in sentences:
     print(f"{iplot}/{N}")
-    status, img = fetch_image_from_sd_server(s)
+    status, img = fetch_image_from_sd_server(s, options=img_options)
     if(status!=200):
         print("SD ERROR:", status)
         exit(3)

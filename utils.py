@@ -53,14 +53,16 @@ OPTIONS = {
     'height': SIZE[1],
     'steps': 20
 }
-def fetch_image_from_sd_server(prompt:str, options:dict=OPTIONS, url:str=URL) -> tuple[int, array]:
-    options["prompt"] = prompt + " Realistic photograph"
+def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL) -> tuple[int, array]:
+    payload = OPTIONS.copy()
+    payload.update(options)
+    payload["prompt"] = prompt + " Realistic photograph"
     response = requests.post(url=f"{url}/sdapi/v1/txt2img", json=options)
     if not response.ok:
         return response.status_code, array(0)
     r = response.json()
     image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
-    image.save(f"{prompt[:4]}.png")
+    # image.save(f"{prompt[:4]}.png")
     rtn = array(image)
     return response.status_code, rtn
     # return 200, array(Image.open(f"{prompt[:4]}.png"))
