@@ -26,6 +26,7 @@ if (gpt_cache_p / cache_filename).exists():
         with open("output.txt", "w") as wfile:
             output = rfile.read()
             print(output)
+            wfile.write(output)
         exit(0)
 
 # print(text_input)
