@@ -2,6 +2,11 @@
 An **AI** powered **video maker** that creates videos from a **single word**.
 
 ## Usage
+Create a file named `config` on the project's root.
+```sh
+SD_ADDR=127.0.0.1 # Or whatever address your SD server's using
+SD_PORT=7860    # Or whatever port your SD server's listening on.
+```
 ```sh
 # For bash/zsh users
 py wikipedia_extractor.py <subject> | py resumer.py
