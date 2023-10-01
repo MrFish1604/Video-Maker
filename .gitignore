@@ -7,3 +7,4 @@ output*
 *.jpg
 fetch_image.py
 .cache
+config
