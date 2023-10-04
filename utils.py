@@ -9,10 +9,13 @@ from PIL import Image
 from contextlib import redirect_stdout
 from configreader import *
 from pathlib import Path
+from multiprocessing import Process, Queue
+from time import sleep
+from tqdm import tqdm
 
 config = readconfig("config")
-SD_ADDR = config.get("SD_ADDR", "127.0.0.1")
-SD_PORT = config.get("SD_PORT", "7860")
+SD_ADDR = config.get("SD_ADDR", D_SD_ADDR)
+SD_PORT = config.get("SD_PORT", D_SD_PORT)
 
 cache_p = Path(".cache")
 if not cache_p.exists():
@@ -73,16 +76,40 @@ OPTIONS = {
     'height': SIZE[1],
     'steps': 20
 }
-def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL) -> tuple[int, array]:
+img_prompt_appendix = ""
+def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, progress_bar:bool=True) -> tuple[int, array]:
     payload = OPTIONS.copy()
     payload.update(options)
     if "height" in options and not "width" in options:
         payload["width"] = 1 + int(int(payload["height"])*ratio)
     elif not "height" in options and "width" in options:
         payload['height'] = 1 + int(int(payload["width"])/ratio)
-    payload["prompt"] = prompt + " Realistic photograph"
+    payload["prompt"] = prompt + img_prompt_appendix
     print("payload=", payload)
-    response = requests.post(url=f"{url}/sdapi/v1/txt2img", json=payload)
+    if progress_bar:
+        def make_req_for_img(q:Queue):
+            r = requests.post(url=f"{url}/sdapi/v1/txt2img", json=payload)
+            q.put(r)
+        pq = Queue()
+        p = Process(target=make_req_for_img, args=(pq,))
+        p.start()
+        last_progress = 0
+        pbar = tqdm(total=100)
+        while pq.empty():
+            prog_req = requests.get(url=f"{url}/sdapi/v1/progress")
+            if not prog_req:
+                p.kill()
+                return 444, array(444)
+            progress = round(prog_req.json().get('progress')*100, 1)
+            pbar.update(progress - last_progress)
+            last_progress = progress
+            sleep(0.1)
+        pbar.update(100 - last_progress)
+        pbar.close()
+        print()
+        response = pq.get()
+    else:
+        response = requests.post(url=f"{url}/sdapi/v1/txt2img", json=payload)
     if not response.ok:
         return response.status_code, array(0)
     r = response.json()

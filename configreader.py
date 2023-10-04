@@ -1,3 +1,6 @@
+D_SD_ADDR = "127.0.0.1"
+D_SD_PORT="7860"
+
 def readconfig(filename:str) -> dict:
     with open(filename, "r") as rfile:
         lines = rfile.readlines()
