@@ -5,6 +5,8 @@ from pathlib import Path
 from hashlib import md5
 from utils import printb
 
+printb("Resumer")
+
 cache_p = Path(".cache")
 if not cache_p.exists():
     Path.mkdir(cache_p)
@@ -37,7 +39,7 @@ By following this optimized prompt, you will generate an effective summary that 
 # system_template = "Describe 3 images of the 3 main concepts of the following text."
 system_template = ""
 # system_template = "You are an AI assistant. Help as much as you can."
-cache_filename = md5((text_input + system_template).encode('utf-8')).hexdigest()
+cache_filename = md5(("explainer" + text_input + system_template).encode('utf-8')).hexdigest()
 if (gpt_cache_p / cache_filename).exists():
     print("Resumer uses cache")
     with open(gpt_cache_p/cache_filename, 'r') as rfile:
