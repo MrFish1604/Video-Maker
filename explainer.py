@@ -10,7 +10,7 @@ cache_p = Path(".cache")
 if not cache_p.exists():
     Path.mkdir(cache_p)
 
-gpt_cache_p = cache_p/"gpt"
+gpt_cache_p = cache_p/"explainer"
 if not gpt_cache_p.exists():
     Path.mkdir(gpt_cache_p)
 

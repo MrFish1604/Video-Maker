@@ -48,7 +48,7 @@ for s in sentences:
     seq = ImageSequenceClip(imgs, fps=FPS)
     text_options = {"color":"White", "font":"Comic-Neue-Bold", "fontsize":fontsize}
     words = cut_str(s)
-    h = 1*seq.duration/len(words)
+    h = (1)*seq.duration/(len(words)+1)
     # text_clip = TextClip("".join([a if a!=' ' else '\n' for a in s]), color="White", font="Comic-Neue-Bold", fontsize=25)
     # text_clip:TextClip = text_clip.set_position(("center","center"))
     # text_clip:TextClip = text_clip.set_duration(seq.duration)

@@ -1,6 +1,5 @@
 from gpt4all import GPT4All
 from sys import argv, stdout, stdin
-from contextlib import redirect_stdout
 from pathlib import Path
 from hashlib import md5
 from utils import printb
@@ -35,10 +34,10 @@ header = """ As a professional summarizer, create a concise and comprehensive su
     2. Incorporate main ideas and essential information, eliminating extraneous language and focusing on critical aspects.
     3. Rely strictly on the provided text, without including external information.
     4. Format the summary in paragraph form for easy understanding.
-    5. Conclude your notes with [End of Notes, Message #X] to indicate completion, where "X" represents the total number of messages that I have sent. In other words, include a message counter where you start with #1 and add 1 to the message counter every time I send a message.
 
 By following this optimized prompt, you will generate an effective summary that encapsulates the essence of the given text in a clear, concise, and reader-friendly manner.
 \""""
+# 5. Conclude your notes with [End of Notes, Message #X] to indicate completion, where "X" represents the total number of messages that I have sent. In other words, include a message counter where you start with #1 and add 1 to the message counter every time I send a message.
 tail = "\""
 # system_template = "List the 3 main concepts of this text. Max 2 words per item."
 # system_template = "Describe 3 images of the 3 main concepts of the following text."
