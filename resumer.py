@@ -11,7 +11,7 @@ cache_p = Path(".cache")
 if not cache_p.exists():
     Path.mkdir(cache_p)
 
-gpt_cache_p = cache_p/"gpt"
+gpt_cache_p = cache_p/"resumer"
 if not gpt_cache_p.exists():
     Path.mkdir(gpt_cache_p)
 
@@ -19,8 +19,12 @@ text_input = ""
 if len(argv)<2:
     text_input = stdin.read()
 else:
-    with open(argv[1]) as rfile:
-        text_input = rfile.read()
+    try:
+        with open(argv[1]) as rfile:
+            text_input = rfile.read()
+    except FileNotFoundError:
+        print(f"File '{argv[1]}' not found")
+        exit(1)
 
 # system_template = "Resume the text given to you in simpler words. Be accurate."
 # system_template = "Resume the text given to you in an entertaining way for children."
@@ -34,12 +38,13 @@ header = """ As a professional summarizer, create a concise and comprehensive su
     5. Conclude your notes with [End of Notes, Message #X] to indicate completion, where "X" represents the total number of messages that I have sent. In other words, include a message counter where you start with #1 and add 1 to the message counter every time I send a message.
 
 By following this optimized prompt, you will generate an effective summary that encapsulates the essence of the given text in a clear, concise, and reader-friendly manner.
-"""
+\""""
+tail = "\""
 # system_template = "List the 3 main concepts of this text. Max 2 words per item."
 # system_template = "Describe 3 images of the 3 main concepts of the following text."
-system_template = ""
-# system_template = "You are an AI assistant. Help as much as you can."
-cache_filename = md5(("explainer" + text_input + system_template).encode('utf-8')).hexdigest()
+# system_template = ""
+system_template = "You are an AI assistant. Help as much as you can."
+cache_filename = md5(("resumer" + text_input + system_template).encode('utf-8')).hexdigest()
 if (gpt_cache_p / cache_filename).exists():
     print("Resumer uses cache")
     with open(gpt_cache_p/cache_filename, 'r') as rfile:
@@ -58,12 +63,12 @@ model = GPT4All(model_name, allow_download=False)
 printb("Model loaded.")
 
 output = ""
-with model.chat_session():
+with model.chat_session(system_template):
     print(model.current_chat_session)
     try:
         with open("output.txt", "w") as wfile:
             print("0"*9)
-            for token in model.generate("TLDR: " + text_input, temp=1, max_tokens=200, streaming=False):
+            for token in model.generate(header + text_input + tail, temp=1, max_tokens=200, streaming=False):
                 print(token, end="")
                 output+=token
                 wfile.write(token)

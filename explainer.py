@@ -21,7 +21,7 @@ else:
     text_input = argv[1]
 system_template = ""
 # system_template = "You are an AI assistant. Help as much as you can."
-cache_filename = md5(("resumer" + text_input + system_template).encode('utf-8')).hexdigest()
+cache_filename = md5(("explainer" + text_input + system_template).encode('utf-8')).hexdigest()
 if (gpt_cache_p / cache_filename).exists():
     print("Explainer uses cache")
     with open(gpt_cache_p/cache_filename, 'r') as rfile:
