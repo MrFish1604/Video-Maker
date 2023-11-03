@@ -13,9 +13,9 @@ from multiprocessing import Process, Queue
 from time import sleep
 from tqdm import tqdm
 
-config = readconfig("config")
-SD_ADDR = config.get("SD_ADDR", D_SD_ADDR)
-SD_PORT = config.get("SD_PORT", D_SD_PORT)
+settings = readconfig("config")
+SD_ADDR = settings.get("SD_ADDR", D_SD_ADDR)
+SD_PORT = settings.get("SD_PORT", D_SD_PORT)
 
 cache_p = Path(".cache")
 if not cache_p.exists():
@@ -24,9 +24,39 @@ tts_cache_p = cache_p/Path("tts")
 if not tts_cache_p.exists():
     Path.mkdir(tts_cache_p)
 
+
+def load_settings(args:list[str]) -> None:
+    global settings
+    settings['batch_size'] = 1
+    settings['ratio'] = 9/16
+    settings['SD'] = {
+        "steps": 20,
+        "steps": 20,
+    }
+    ratio = settings['ratio']
+    img_op = settings['SD']
+    for arg in args:
+        op = arg.split('=')
+        if len(op)!=2:
+            continue
+        img_op[op[0]] = op[1]
+    if not 'width' in img_op:
+        if 'height' in img_op:
+            img_op['height'] = int(img_op['height'])
+            img_op['width'] = 1 + int(img_op["height"]*ratio)
+        else:
+            img_op['width'] = 512
+            img_op['height'] = 911
+    elif not 'height' in img_op:
+        img_op['width'] = int(img_op['width'])
+        img_op['height'] = 1 + int(img_op["width"]/ratio)
+    else:
+        img_op['width'] = int(img_op['width'])
+        img_op['height'] = int(img_op['height'])
+        settings['ratio'] = img_op['width']/img_op['height']
+
 BOLD = '\033[1m'
 ENDC = '\033[0m'
-
 def printb(txt:str, *args, **kwargs):
     print(BOLD + txt + ENDC, *args, **kwargs)
 
@@ -54,16 +84,16 @@ def read_sentences(stream: TextIO) -> list[str]:
         a = stream.read(1)
     return sentences
 
-def pil_to_base64(pil_image: Image) -> str:
-    """Encode PIL Image to base64 string."""
-    with BytesIO() as stream:
-        meta = PngImagePlugin.PngInfo()
-        for k, v in pil_image.info.items():
-            if isinstance(k, str) and isinstance(v, str):
-                meta.add_text(k, v)
-        pil_image.save(stream, "PNG", pnginfo=meta)
-        base64_str = str(base64.b64encode(stream.getvalue()), "utf-8")
-        return "data:image/png;base64," + base64_str
+# def pil_to_base64(pil_image: Image) -> str:
+#     """Encode PIL Image to base64 string."""
+#     with BytesIO() as stream:
+#         meta = PngImagePlugin.PngInfo()
+#         for k, v in pil_image.info.items():
+#             if isinstance(k, str) and isinstance(v, str):
+#                 meta.add_text(k, v)
+#         pil_image.save(stream, "PNG", pnginfo=meta)
+#         base64_str = str(base64.b64encode(stream.getvalue()), "utf-8")
+        # return "data:image/png;base64," + base64_str
 
 def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
     img = np.zeros(size+(3,), dtype=int)
@@ -78,32 +108,16 @@ def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
             j=0
     return img
 
-ratio = 9/16
-__x = 512
-SIZE = (__x, int(1 + __x/ratio))
 URL = f"http://{SD_ADDR}:{SD_PORT}"
-OPTIONS = {
-    'width': SIZE[0],
-    'height': SIZE[1],
-    'steps': 20
-}
 img_prompt_appendix = ""
-def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, progress_bar:bool=True) -> tuple[int, array]:
-    payload = OPTIONS.copy()
+def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, progress_bar:bool=True, upscaler="ESRGAN_4x") -> tuple[int, array]:
+    payload = settings['SD'].copy()
     payload.update(options)
-    if "height" in options and not "width" in options:
-        payload["width"] = 1 + int(int(payload["height"])*ratio)
-    elif not "height" in options and "width" in options:
-        payload['height'] = 1 + int(int(payload["width"])/ratio)
     payload["prompt"] = prompt + img_prompt_appendix
-    upscale = False
-    if int(payload["width"])*int(payload["height"]) > 150_000 or True:
-        print("SD will use an upscaler")
-        upscale = True
-        expected_width = payload["width"]
-        expected_height = payload["height"]
-        payload["width"] = 512
-        payload['height'] = 1 + int(int(payload["width"])/ratio)
+    if upscaler:
+        payload['width'] = 512
+        payload['height'] = 1 + int(payload['width']/settings['ratio'])
+        print(f"SD will use {upscaler} as an upscaler, ({payload['width']}, {payload['height']}) -> ({settings['SD']['width']}, {settings['SD']['height']})")
     print("payload=", payload)
     if progress_bar:
         def make_req_for_img(q:Queue):
@@ -133,16 +147,27 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, pro
         print(response.json())
         return response.status_code, array(0)
     r = response.json()
-    if upscale:
-        print("Upscaling...")
+    if upscaler:
+        print(f"Upscaling ({payload['width']}, {payload['height']}) -> ({settings['SD']['width']}, {settings['SD']['height']})...")
         upscaler_payload = {
-            "upscaler_1": "ESRGAN_4x",
-            "upscaling_resize": 2,
-            "upscaling_crop": "false",
+            "upscaler_1": upscaler,
+            "upscaling_resize_w": settings['SD']['width'],
+            "upscaling_resize_h": settings['SD']['height'],
+            "upscaling_crop": "true",
             "imageList" : [{"data":r['images'][i], "name":str(i)} for i in range(len(r['images']))]
         }
         response = requests.post(url = f"{url}/sdapi/v1/extra-batch-images", json=upscaler_payload)
         r = response.json()
+    # Upscale 2x for scrolling
+    print("Upscaling 2x...")
+    upscaler_payload = {
+        "upscaler_1": upscaler if upscaler else "ESRGAN_4x",
+        "upscaling_resize": 2,
+        "upscaling_crop": "false",
+        "imageList" : [{"data":r['images'][i], "name":str(i)} for i in range(len(r['images']))]
+    }
+    response = requests.post(url = f"{url}/sdapi/v1/extra-batch-images", json=upscaler_payload)
+    r = response.json()
     if not response.ok:
         print(response.json())
         return response.status_code, array(0)

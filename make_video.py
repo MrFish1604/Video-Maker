@@ -7,15 +7,11 @@ import matplotlib.pyplot as plt
 
 FPS = 24
 
-img_options = {"batch_size":1}
-if len(argv)>1:
-    for arg in argv[1:]:
-        op = arg.split('=')
-        if len(op)!=2:
-            continue
-        img_options[op[0]] = op[1]
+load_settings(argv[1:])
+print("Settings =", settings)
+SIZE = (settings['SD']['width'], settings['SD']['height'])
 
-print(f"Images Options : {img_options}")
+print(f"Images Options : {settings['SD']}")
 printb("\nReading input stream...\n")
 sentences = read_sentences(stdin)
 N = len(sentences)
@@ -36,10 +32,10 @@ imgs: list[array] = []
 text_clips:list[TextClip] = []
 img_clips:list[ImageSequenceClip] = []
 duration = 0
-fontsize = calc_fontsize(int(img_options.get("height", img_options.get("width", SIZE[1]))))
+fontsize = calc_fontsize(int(settings['SD'].get("height", settings['SD'].get("width", SIZE[1]))))
 for s in sentences:
     print(f"{iplot}/{N}")
-    status, img = fetch_image_from_sd_server(s, options=img_options)
+    status, img = fetch_image_from_sd_server(s)
     if(status!=200):
         printb("SD ERROR:", status)
         exit(3)
