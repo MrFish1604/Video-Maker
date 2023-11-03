@@ -2,6 +2,7 @@ from sys import stdin, argv
 from utils import *
 from numpy import array
 from moviepy.editor import ImageSequenceClip, AudioFileClip, concatenate_audioclips, TextClip, CompositeVideoClip, concatenate_videoclips
+from moviepy.video.fx import all as vfx
 import matplotlib.pyplot as plt
 
 FPS = 24
@@ -52,7 +53,8 @@ for s in sentences:
     # text_clip = TextClip("".join([a if a!=' ' else '\n' for a in s]), color="White", font="Comic-Neue-Bold", fontsize=25)
     # text_clip:TextClip = text_clip.set_position(("center","center"))
     # text_clip:TextClip = text_clip.set_duration(seq.duration)
-    img_clips.append(seq.set_start(duration, change_end=True))
+    seq = seq.set_start(duration, change_end=True).fx(vfx.fadeout, duration=0.2).fx(vfx.fadein, duration=0.2)
+    img_clips.append(seq)
     text_clips += [(
         TextClip(words[i], **text_options)
         .set_position(("center",)*2)
