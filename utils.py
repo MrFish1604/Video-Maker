@@ -3,9 +3,9 @@ from numpy import array
 import numpy as np
 from hashlib import md5
 import requests
-import io
+from io import BytesIO
 import base64
-from PIL import Image
+from PIL import Image, PngImagePlugin
 from contextlib import redirect_stdout
 from configreader import *
 from pathlib import Path
@@ -54,6 +54,17 @@ def read_sentences(stream: TextIO) -> list[str]:
         a = stream.read(1)
     return sentences
 
+def pil_to_base64(pil_image: Image) -> str:
+    """Encode PIL Image to base64 string."""
+    with BytesIO() as stream:
+        meta = PngImagePlugin.PngInfo()
+        for k, v in pil_image.info.items():
+            if isinstance(k, str) and isinstance(v, str):
+                meta.add_text(k, v)
+        pil_image.save(stream, "PNG", pnginfo=meta)
+        base64_str = str(base64.b64encode(stream.getvalue()), "utf-8")
+        return "data:image/png;base64," + base64_str
+
 def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
     img = np.zeros(size+(3,), dtype=int)
     j = 0
@@ -85,6 +96,14 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, pro
     elif not "height" in options and "width" in options:
         payload['height'] = 1 + int(int(payload["width"])/ratio)
     payload["prompt"] = prompt + img_prompt_appendix
+    upscale = False
+    if int(payload["width"])*int(payload["height"]) > 150_000:
+        print("SD will use an upscaler")
+        upscale = True
+        expected_width = payload["width"]
+        expected_height = payload["height"]
+        payload["width"] = 512
+        payload['height'] = 1 + int(int(payload["width"])/ratio)
     print("payload=", payload)
     if progress_bar:
         def make_req_for_img(q:Queue):
@@ -106,14 +125,28 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, pro
             sleep(0.1)
         pbar.update(100 - last_progress)
         pbar.close()
-        print()
+        # print()
         response = pq.get()
     else:
         response = requests.post(url=f"{url}/sdapi/v1/txt2img", json=payload)
     if not response.ok:
+        print(response.json())
         return response.status_code, array(0)
     r = response.json()
-    images:list = [array(Image.open(io.BytesIO(base64.b64decode(img)))) for img in r['images']]
+    if upscale:
+        print("Upscaling...")
+        upscaler_payload = {
+            "upscaler_1": "ESRGAN_4x",
+            "upscaling_resize": 2,
+            "upscaling_crop": "false",
+            "imageList" : [{"data":r['images'][i], "name":str(i)} for i in range(len(r['images']))]
+        }
+        response = requests.post(url = f"{url}/sdapi/v1/extra-batch-images", json=upscaler_payload)
+        r = response.json()
+    if not response.ok:
+        print(response.json())
+        return response.status_code, array(0)
+    images:list = [array(Image.open(BytesIO(base64.b64decode(img)))) for img in r['images']]
     return response.status_code, images
     # return 200, array(Image.open(f"{prompt[:4]}.png"))
 
