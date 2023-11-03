@@ -13,8 +13,8 @@ SIZE = (settings['SD']['width'], settings['SD']['height'])
 
 oi = (1 - UP_RESIZE)*settings['SD']['width']/2
 oj = (1 - UP_RESIZE)*settings['SD']['height']/2
-doi = -5
-doj = -5
+doi = -10
+doj = -10
 def move_img(t:float) -> tuple[float]:
     return (oi + doi*t, oj + doj*t)
 
@@ -42,8 +42,8 @@ duration = 0
 fontsize = calc_fontsize(int(settings['SD'].get("height", settings['SD'].get("width", SIZE[1]))))
 for s in sentences:
     print(f"{iplot}/{N}")
-    status, img = fetch_image_from_sd_server(s)
-    if(status!=200):
+    status, img = fetch_image_from_sd_server(s, cache=True)
+    if(status!=200 and status!=0):
         printb("SD ERROR:", status)
         exit(3)
     imgs = [img[0]]*round(FPS/len(img))*(int(audio_clips[iplot-1].duration + 0.5))

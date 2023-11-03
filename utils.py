@@ -17,7 +17,7 @@ settings = readconfig("config")
 SD_ADDR = settings.get("SD_ADDR", D_SD_ADDR)
 SD_PORT = settings.get("SD_PORT", D_SD_PORT)
 
-UP_RESIZE = 1.2
+UP_RESIZE = 1.5
 
 cache_p = Path(".cache")
 if not cache_p.exists():
@@ -25,7 +25,9 @@ if not cache_p.exists():
 tts_cache_p = cache_p/Path("tts")
 if not tts_cache_p.exists():
     Path.mkdir(tts_cache_p)
-
+img_cache_p = cache_p / Path("images")
+if not img_cache_p.exists():
+    Path.mkdir(img_cache_p)
 
 def load_settings(args:list[str]) -> None:
     global settings
@@ -112,15 +114,21 @@ def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
 
 URL = f"http://{SD_ADDR}:{SD_PORT}"
 img_prompt_appendix = ""
-def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, progress_bar:bool=True, upscaler="ESRGAN_4x") -> tuple[int, array]:
+def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, progress_bar:bool=True, upscaler:str="ESRGAN_4x", cache:bool=False) -> tuple[int, array]:
     payload = settings['SD'].copy()
     payload.update(options)
     payload["prompt"] = prompt + img_prompt_appendix
     upscale = False
+    if cache:
+        cache_filename = md5((prompt + str(options) + str(payload) + str(upscaler)).encode('utf-8')).hexdigest()
+        if (img_cache_p/cache_filename).exists():
+            print("Use cached images instead of SD")
+            return 0, [array(Image.open(f)) for f in (img_cache_p/cache_filename).iterdir() if f.is_file() and f.suffix=='.png']
     if upscaler and payload['width']*payload['height']>512*912:
         upscale>False
         payload['width'] = 512
         payload['height'] = 1 + int(payload['width']/settings['ratio'])
+        upscale = True
         print(f"SD will use {upscaler} as an upscaler, ({payload['width']}, {payload['height']}) -> ({settings['SD']['width']}, {settings['SD']['height']})")
     print("payload=", payload)
     if progress_bar:
@@ -175,7 +183,15 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, pro
     if not response.ok:
         print(response.json())
         return response.status_code, array(0)
-    images:list = [array(Image.open(BytesIO(base64.b64decode(img)))) for img in r['images']]
+    if cache:
+        Path.mkdir(img_cache_p/cache_filename)
+        def save_img(x:bytes)->array:
+            lx = Image.open(BytesIO(base64.b64decode(x)))
+            lx.save(img_cache_p/cache_filename/(md5(x.encode('utf-8')).hexdigest() + '.png'))
+            return array(lx)
+        images:list = [save_img(img) for img in r['images']]
+    else:
+        images:list = [array(Image.open(BytesIO(base64.b64decode(img)))) for img in r['images']]
     return response.status_code, images
     # return 200, array(Image.open(f"{prompt[:4]}.png"))
 
