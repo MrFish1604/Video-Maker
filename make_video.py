@@ -11,6 +11,13 @@ load_settings(argv[1:])
 print("Settings =", settings)
 SIZE = (settings['SD']['width'], settings['SD']['height'])
 
+oi = (1 - UP_RESIZE)*settings['SD']['width']/2
+oj = (1 - UP_RESIZE)*settings['SD']['height']/2
+doi = -5
+doj = -5
+def move_img(t:float) -> tuple[float]:
+    return (oi + doi*t, oj + doj*t)
+
 print(f"Images Options : {settings['SD']}")
 printb("\nReading input stream...\n")
 sentences = read_sentences(stdin)

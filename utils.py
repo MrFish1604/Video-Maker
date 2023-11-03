@@ -17,6 +17,8 @@ settings = readconfig("config")
 SD_ADDR = settings.get("SD_ADDR", D_SD_ADDR)
 SD_PORT = settings.get("SD_PORT", D_SD_PORT)
 
+UP_RESIZE = 1.2
+
 cache_p = Path(".cache")
 if not cache_p.exists():
     Path.mkdir(cache_p)
@@ -114,7 +116,9 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, pro
     payload = settings['SD'].copy()
     payload.update(options)
     payload["prompt"] = prompt + img_prompt_appendix
-    if upscaler:
+    upscale = False
+    if upscaler and payload['width']*payload['height']>512*912:
+        upscale>False
         payload['width'] = 512
         payload['height'] = 1 + int(payload['width']/settings['ratio'])
         print(f"SD will use {upscaler} as an upscaler, ({payload['width']}, {payload['height']}) -> ({settings['SD']['width']}, {settings['SD']['height']})")
@@ -147,7 +151,7 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, pro
         print(response.json())
         return response.status_code, array(0)
     r = response.json()
-    if upscaler:
+    if upscale:
         print(f"Upscaling ({payload['width']}, {payload['height']}) -> ({settings['SD']['width']}, {settings['SD']['height']})...")
         upscaler_payload = {
             "upscaler_1": upscaler,
@@ -159,13 +163,13 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, pro
         response = requests.post(url = f"{url}/sdapi/v1/extra-batch-images", json=upscaler_payload)
         r = response.json()
     # Upscale 2x for scrolling
-    print("Upscaling 2x...")
     upscaler_payload = {
         "upscaler_1": upscaler if upscaler else "ESRGAN_4x",
-        "upscaling_resize": 2,
+        "upscaling_resize": UP_RESIZE,
         "upscaling_crop": "false",
         "imageList" : [{"data":r['images'][i], "name":str(i)} for i in range(len(r['images']))]
     }
+    print(f"Upscaling {upscaler_payload['upscaling_resize']}x...")
     response = requests.post(url = f"{url}/sdapi/v1/extra-batch-images", json=upscaler_payload)
     r = response.json()
     if not response.ok:
@@ -208,7 +212,3 @@ def cut_str(txt:str, N:int=15) -> list[str]:
             rtn.append("")
         rtn[-1] += a + " "
     return rtn
-
-
-def move_img(t:float) -> tuple[float]:
-    return (-10*t, -10*t)
