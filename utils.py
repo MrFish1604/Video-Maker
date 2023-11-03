@@ -79,7 +79,7 @@ def get_image_from_text(txt: str, size:tuple[int]=(256, 256)) -> array:
     return img
 
 ratio = 9/16
-__x = 256
+__x = 512
 SIZE = (__x, int(1 + __x/ratio))
 URL = f"http://{SD_ADDR}:{SD_PORT}"
 OPTIONS = {
@@ -97,7 +97,7 @@ def fetch_image_from_sd_server(prompt:str, options:dict=dict(), url:str=URL, pro
         payload['height'] = 1 + int(int(payload["width"])/ratio)
     payload["prompt"] = prompt + img_prompt_appendix
     upscale = False
-    if int(payload["width"])*int(payload["height"]) > 150_000:
+    if int(payload["width"])*int(payload["height"]) > 150_000 or True:
         print("SD will use an upscaler")
         upscale = True
         expected_width = payload["width"]
@@ -183,3 +183,7 @@ def cut_str(txt:str, N:int=15) -> list[str]:
             rtn.append("")
         rtn[-1] += a + " "
     return rtn
+
+
+def move_img(t:float) -> tuple[float]:
+    return (-10*t, -10*t)

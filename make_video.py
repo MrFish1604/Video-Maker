@@ -46,14 +46,14 @@ for s in sentences:
     imgs = [img[0]]*round(FPS/len(img))*(int(audio_clips[iplot-1].duration + 0.5))
     for i in img[1:]:
         imgs += [i]*round(FPS/len(img))*(int(audio_clips[iplot-1].duration + 0.5))
-    seq = ImageSequenceClip(imgs, fps=FPS)
+    seq:ImageSequenceClip = ImageSequenceClip(imgs, fps=FPS)
     text_options = {"color":"White", "font":"Comic-Neue-Bold", "fontsize":fontsize}
     words = cut_str(s)
     h = (1)*seq.duration/(len(words)+1)
     # text_clip = TextClip("".join([a if a!=' ' else '\n' for a in s]), color="White", font="Comic-Neue-Bold", fontsize=25)
     # text_clip:TextClip = text_clip.set_position(("center","center"))
-    # text_clip:TextClip = text_clip.set_duration(seq.duration)
-    seq = seq.set_start(duration, change_end=True).fx(vfx.fadeout, duration=0.2).fx(vfx.fadein, duration=0.2)
+    # text_clip:TextClip = text_clip.set_duration(seq.duration
+    seq = seq.set_start(duration, change_end=True).fx(vfx.fadeout, duration=0.2).fx(vfx.fadein, duration=0.2).set_position(move_img)
     img_clips.append(seq)
     text_clips += [(
         TextClip(words[i], **text_options)
@@ -66,7 +66,7 @@ for s in sentences:
 
 # clip = ImageSequenceClip(imgs, fps=FPS)
 # clip = concatenate_videoclips(img_clips)
-clip:CompositeVideoClip = CompositeVideoClip(img_clips + text_clips)
+clip:CompositeVideoClip = CompositeVideoClip(img_clips + text_clips, size=SIZE)
 clip = clip.set_audio(audio_clip)
 clip.set_duration(duration).write_videofile("output.mp4", fps=FPS)
 # clip.preview()

@@ -8,4 +8,4 @@ output*
 fetch_image.py
 .cache
 config
-test.py
+test*
