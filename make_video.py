@@ -4,6 +4,7 @@ from numpy import array
 from moviepy.editor import ImageSequenceClip, AudioFileClip, concatenate_audioclips, TextClip, CompositeVideoClip, concatenate_videoclips
 from moviepy.video.fx import all as vfx
 import matplotlib.pyplot as plt
+from random import randint, choice
 
 FPS = 24
 
@@ -13,9 +14,21 @@ SIZE = (settings['SD']['width'], settings['SD']['height'])
 
 oi = (1 - UP_RESIZE)*settings['SD']['width']/2
 oj = (1 - UP_RESIZE)*settings['SD']['height']/2
-doi = -10
-doj = -10
+doi = -randint(10, 20)
+doj = -randint(10, 20)
+last_t = 0
+
+def change_move_img() -> None:
+    global doi
+    global doj
+    doi = randint(10, 20)*choice([-1, 1])
+    doj = randint(10, 20)*choice([-1, 1])
+
 def move_img(t:float) -> tuple[float]:
+    global last_t
+    if t < last_t:
+        change_move_img()
+    last_t = t
     return (oi + doi*t, oj + doj*t)
 
 print(f"Images Options : {settings['SD']}")
@@ -56,6 +69,7 @@ for s in sentences:
     # text_clip = TextClip("".join([a if a!=' ' else '\n' for a in s]), color="White", font="Comic-Neue-Bold", fontsize=25)
     # text_clip:TextClip = text_clip.set_position(("center","center"))
     # text_clip:TextClip = text_clip.set_duration(seq.duration
+    _a, _b = randint(-10, 20), randint(-10, 20)
     seq = seq.set_start(duration, change_end=True).fx(vfx.fadeout, duration=0.2).fx(vfx.fadein, duration=0.2).set_position(move_img)
     img_clips.append(seq)
     text_clips += [(
@@ -66,6 +80,8 @@ for s in sentences:
         ) for i in range(len(words)) if not words[i] in [' ', '\n', '']]
     duration += seq.duration
     iplot+=1
+    # change_move_img()
+    # print("(doi, doj) =", (doi, doj))
 
 # clip = ImageSequenceClip(imgs, fps=FPS)
 # clip = concatenate_videoclips(img_clips)
