@@ -52,7 +52,7 @@ imgs: list[array] = []
 text_clips:list[TextClip] = []
 img_clips:list[ImageSequenceClip] = []
 duration = 0
-fontsize = calc_fontsize(int(settings['SD'].get("height", settings['SD'].get("width", SIZE[1]))))
+fontsize = calc_fontsize(settings['SD']['width'])
 for s in sentences:
     print(f"{iplot}/{N}")
     status, img = fetch_image_from_sd_server(s, cache=True)

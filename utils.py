@@ -64,8 +64,8 @@ ENDC = '\033[0m'
 def printb(txt:str, *args, **kwargs):
     print(BOLD + txt + ENDC, *args, **kwargs)
 
-def calc_fontsize(h:int) -> int:
-    return 0.05*h
+def calc_fontsize(w:int) -> int:
+    return 0.1*w
 
 def read_sentences(stream: TextIO) -> list[str]:
     sentences = []
